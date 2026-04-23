@@ -1,0 +1,446 @@
+/* ===== RESET ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ===== TOKENS ===== */
+:root {
+  --ink:        #2B2520;
+  --ink-mid:    #574E45;
+  --ink-soft:   #8A7B6F;
+  --dust:       #d4924a;
+  --ochre:      #c07830;
+  --shadow:     #2d3a5c;
+  --dark:       #161e36;
+  --haze:       #8fa4b8;
+  --teal:       #7ab8a0;
+  --palm:       #3d6b52;
+  --paper:      #f0f2f7;
+  --chalk:      #e4e8f0;
+  --fog:        #9aaabf;
+  --craft:      #5a4a7a;
+  --divider:    rgba(154,170,191,0.45);
+  --warm-shadow: rgba(45,58,92,0.10);
+}
+
+/* ===== NOISE TEXTURE ===== */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 9999; opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* ===== BASE ===== */
+html { font-size: 16px; }
+
+body {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  color: var(--ink);
+  min-height: 100vh;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(160deg, #5da0b8 0%, #6db4c8 40%, #7abbc0 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  background-blend-mode: normal, overlay;
+  line-height: 1.65;
+}
+
+/* Vignette */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+  background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(30,55,70,0.28) 100%);
+}
+
+body.locked { overflow: hidden; }
+
+/* ===== LOGIN ===== */
+.login-screen {
+  position: fixed; inset: 0;
+  display: flex; justify-content: flex-start; align-items: center;
+  padding-left: 8%;
+  background:
+    linear-gradient(to right, rgba(93,160,184,0.88) 0%, rgba(93,160,184,0.62) 40%, rgba(122,187,192,0.42) 100%),
+    url('cover.jpg');
+  background-size: cover; background-position: 75% center; background-repeat: no-repeat;
+  z-index: 999;
+}
+@media (max-width: 768px) {
+  .login-screen { justify-content: center; padding-left: 0; background-position: center; }
+}
+.login-box {
+  text-align: center; padding: 1.8rem 2rem;
+  background: rgba(255,255,255,0.22);
+  backdrop-filter: blur(12px);
+  border-radius: 12px; width: 90%; max-width: 320px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(0,0,0,0.05);
+}
+.login-title {
+  font-family: 'Libre Baskerville', serif; font-style: italic;
+  font-size: 1.9rem; color: white;
+}
+.entry-prompt { color: rgba(255,255,255,0.9); margin: 0.5rem 0 1rem; font-family: 'Patrick Hand', cursive; }
+.login-box input {
+  width: 100%; padding: 0.7rem; border: none; border-radius: 6px;
+  background: rgba(255,255,255,0.3); color: white;
+  font-family: 'Patrick Hand', cursive; font-size: 1rem; outline: none;
+}
+.login-box input::placeholder { color: rgba(255,255,255,0.7); }
+.login-box button {
+  margin-top: 1rem; padding: 0.6rem; width: 100%;
+  border: none; border-radius: 20px; background: #D65A4A; color: white;
+  cursor: pointer; font-family: 'Patrick Hand', cursive; font-size: 1rem;
+  transition: background 150ms ease;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.login-box button:hover { background: #c04e3f; }
+
+/* ===== MASTHEAD ===== */
+.masthead {
+  text-align: center; padding: 3rem 1rem 1.5rem;
+  position: relative; z-index: 1; transition: opacity 200ms ease;
+}
+.masthead-label {
+  color: rgba(255,255,255,0.72); font-size: 0.78rem;
+  letter-spacing: 1.5px; text-transform: uppercase; font-family: 'Patrick Hand', cursive;
+}
+.masthead h1 {
+  font-family: 'Libre Baskerville', serif; font-style: italic;
+  color: white; font-size: clamp(1.8rem, 5vw, 2.8rem); margin-top: 0.5rem;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.22); letter-spacing: 0.2px;
+}
+.masthead-author { color: rgba(255,255,255,0.82); margin-top: 0.3rem; font-family: 'Patrick Hand', cursive; }
+
+/* ===== NAV ===== */
+.zone-nav-wrap {
+  display: flex; justify-content: center;
+  margin-top: 0.5rem; padding: 0 1rem;
+  position: relative; z-index: 1; transition: opacity 200ms ease;
+}
+.zone-nav {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+}
+.zone-nav button {
+  background: rgba(255,255,255,0.25); border: none;
+  padding: 0.5rem 0.85rem; color: white; cursor: pointer;
+  border-radius: 20px; font-family: 'Patrick Hand', cursive; font-size: 0.88rem;
+  transition: background 150ms ease; display: flex; align-items: center; gap: 0.35rem;
+}
+.zone-nav button:hover { background: rgba(255,255,255,0.38); }
+.zone-nav button.active {
+  background: #D65A4A;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.nav-num {
+  font-size: 0.68rem; background: rgba(255,255,255,0.2);
+  border-radius: 50%; width: 16px; height: 16px;
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.zone-nav button.active .nav-num { background: rgba(255,255,255,0.3); }
+
+/* ===== MAIN ===== */
+main {
+  max-width: 760px; margin: 1.5rem auto;
+  padding: 2rem 1.8rem 5rem;
+  position: relative; z-index: 1;
+  background: rgba(255,255,255,0.88);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(0,0,0,0.05);
+}
+@media (max-width: 600px) { main { margin: 0.8rem; padding: 1.4rem 1.2rem 4rem; border-radius: 12px; } }
+
+/* ===== ZONE BASE ===== */
+.zone { display: none; opacity: 0; }
+.zone.active { display: block; opacity: 1; transition: opacity 180ms ease; }
+
+/* Zone header */
+.zone-header { margin-bottom: 1.8rem; }
+.zone-subtitle {
+  font-family: 'Patrick Hand', cursive; font-size: 0.72rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ochre); margin-bottom: 0.3rem;
+}
+.zone h2 {
+  font-family: 'Libre Baskerville', serif; font-style: italic;
+  font-size: 1.7rem; color: var(--shadow); letter-spacing: 0.2px;
+  padding-bottom: 0.5rem; border-bottom: 2px solid var(--dust);
+  margin-bottom: 0.6rem;
+}
+.zone-teacher-note {
+  font-family: 'Patrick Hand', cursive; font-size: 0.8rem;
+  color: var(--ink-soft); border-left: 2px solid var(--divider);
+  padding-left: 0.8rem; line-height: 1.55; max-width: 560px; opacity: 0.8;
+}
+
+/* ===== SURFACE SYSTEM (ported from Charlotte's Web) ===== */
+.surface-dense {
+  background: rgba(240,242,247,0.7);
+  border: 1px solid var(--divider);
+  border-left: 3px solid var(--ochre);
+  border-radius: 0 5px 5px 0;
+  padding: 1.4rem 1.5rem;
+  margin-bottom: 1.4rem;
+}
+.surface-light {
+  background: rgba(255,255,255,0.55);
+  border: 1px solid var(--divider);
+  border-radius: 5px;
+  padding: 1.6rem 1.8rem;
+  margin-bottom: 1.4rem;
+  box-shadow: 0 4px 16px var(--warm-shadow);
+}
+
+/* ===== SHARED WRITING SURFACE ===== */
+.thinking-area {
+  width: 100%; min-height: 110px;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid var(--divider); border-radius: 5px;
+  padding: 0.85rem 1rem;
+  font-family: 'Patrick Hand', cursive; font-size: 1.05rem;
+  color: var(--ink); line-height: 1.9; resize: vertical; outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  background-image: repeating-linear-gradient(transparent, transparent 42px, rgba(154,170,191,0.2) 42px, rgba(154,170,191,0.2) 43px);
+  background-attachment: local;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.thinking-area:focus {
+  border-color: var(--ochre);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.thinking-area::placeholder { color: var(--ink-soft); font-style: italic; opacity: 0.6; }
+
+.word-count {
+  font-family: 'Patrick Hand', cursive; font-size: 0.72rem;
+  color: var(--ink-soft); text-align: right; margin-top: 0.3rem; margin-bottom: 1rem;
+}
+.open-write-label {
+  font-family: 'Patrick Hand', cursive; font-size: 0.8rem;
+  color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 0.5rem; margin-top: 1.2rem;
+}
+.surface-divider { height: 1px; background: var(--divider); margin: 1.6rem 0; }
+
+/* ===== VOCAB ===== */
+.vocab-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+.vocab-card {
+  background: var(--paper); border-radius: 5px;
+  border-left: 4px solid var(--dust); border-top: 1px solid var(--divider);
+  border-right: 1px solid var(--divider); border-bottom: 1px solid var(--divider);
+  padding: 1.1rem; cursor: pointer; min-height: 100px;
+  transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+  box-shadow: 2px 3px 0 var(--warm-shadow);
+  position: relative; overflow: hidden;
+}
+.vocab-card:hover { transform: translateY(-2px); border-left-color: var(--ochre); box-shadow: 0 6px 18px rgba(0,0,0,0.1); }
+.vocab-card.revealed { border-left-color: var(--palm); }
+.vocab-back { display: none; }
+.vocab-card.revealed .vocab-front { display: none; }
+.vocab-card.revealed .vocab-back { display: block; }
+.vocab-word { font-family: 'Libre Baskerville', serif; font-style: italic; font-size: 1.15rem; color: var(--shadow); }
+.vocab-hint { font-family: 'Patrick Hand', cursive; font-size: 0.75rem; color: var(--fog); margin-top: 0.3rem; }
+.vocab-def  { font-family: 'Patrick Hand', cursive; font-size: 0.88rem; color: var(--ink); margin-top: 0.5rem; line-height: 1.55; }
+
+/* ===== QUIZ ===== */
+.quiz-q {
+  background: var(--paper); border-radius: 5px; padding: 1.4rem;
+  margin-bottom: 1.1rem; border: 1px solid var(--divider);
+  box-shadow: 2px 3px 0 var(--warm-shadow);
+}
+.quiz-q p { font-size: 0.97rem; margin-bottom: 1rem; color: var(--ink); line-height: 1.65; }
+.q-num { font-family: 'Libre Baskerville', serif; font-style: italic; color: var(--ochre); margin-right: 0.3rem; }
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+@media (max-width: 500px) { .options { grid-template-columns: 1fr; } }
+.opt-btn {
+  background: var(--chalk); border: 1.5px solid var(--fog);
+  border-radius: 4px; padding: 0.6rem 0.85rem;
+  font-family: 'Patrick Hand', cursive; font-size: 0.92rem;
+  cursor: pointer; text-align: left; color: var(--ink);
+  transition: all 0.14s;
+}
+.opt-btn:not(:disabled):hover { border-color: var(--dust); background: rgba(212,146,74,0.1); }
+.opt-btn.correct { background: #dff0e0; border-color: var(--palm); color: var(--palm); font-weight: 700; }
+.opt-btn.wrong   { background: #f5e0dc; border-color: #9e3a2a; color: #9e3a2a; }
+.opt-btn.spent   { opacity: 0.45; }
+.feedback {
+  margin-top: 0.85rem; font-family: 'Patrick Hand', cursive;
+  font-size: 0.9rem; line-height: 1.55; min-height: 1rem;
+}
+.fb-correct { color: var(--palm); }
+.fb-wrong   { color: #9e3a2a; }
+.score-line {
+  font-family: 'Patrick Hand', cursive; font-size: 1rem;
+  color: var(--shadow); margin-top: 1rem; padding: 0.8rem 1rem;
+  background: var(--chalk); border-radius: 5px; border-left: 3px solid var(--ochre);
+}
+
+/* ===== CHARACTER MAP ===== */
+.char-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.char-node {
+  background: var(--chalk); border-radius: 5px;
+  border: 1.5px solid var(--fog); border-bottom: 3px solid var(--fog);
+  padding: 1rem 0.8rem; text-align: center;
+  cursor: pointer; transition: all 0.16s;
+  box-shadow: 2px 3px 0 var(--warm-shadow);
+}
+.char-node:hover { border-color: var(--dust); border-bottom-color: var(--ochre); transform: translateY(-2px) rotate(-0.3deg); }
+.char-node.selected { border-color: var(--shadow); border-bottom-color: var(--shadow); background: rgba(45,58,92,0.08); }
+.char-emoji { font-size: 2rem; margin-bottom: 0.35rem; }
+.char-name  { font-family: 'Libre Baskerville', serif; font-style: italic; font-size: 1rem; color: var(--shadow); }
+.char-role  { font-family: 'Patrick Hand', cursive; font-size: 0.75rem; color: var(--ochre); margin-top: 0.2rem; }
+
+.char-expand-panel {
+  margin-bottom: 0.5rem;
+}
+.char-expand-inner {
+  background: rgba(255,255,255,0.65); border: 1px solid var(--divider);
+  border-left: 3px solid var(--shadow); border-radius: 0 5px 5px 0;
+  padding: 1.2rem 1.4rem; animation: slideIn 0.22s ease;
+}
+@keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.char-expand-name {
+  font-family: 'Libre Baskerville', serif; font-style: italic;
+  font-size: 1.1rem; color: var(--shadow); margin-bottom: 0.65rem;
+}
+.char-expand-role { font-family: 'Patrick Hand', cursive; font-size: 0.8rem; color: var(--ink-soft); font-style: normal; margin-left: 0.4rem; }
+.trait-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.85rem; }
+.trait-tag {
+  font-family: 'Patrick Hand', cursive; font-size: 0.8rem;
+  background: var(--chalk); border: 1px solid var(--fog);
+  border-radius: 20px; padding: 0.2rem 0.7rem; color: var(--ink-mid);
+}
+.char-think {
+  font-family: 'Libre Baskerville', serif; font-style: italic;
+  font-size: 0.9rem; color: var(--ink-mid); line-height: 1.65;
+  border-top: 1px solid var(--divider); padding-top: 0.7rem;
+}
+
+/* ===== CRAFT ===== */
+.craft-block { border-left-color: var(--craft); }
+.craft-quote {
+  font-family: 'Libre Baskerville', serif; font-style: italic;
+  font-size: 1.05rem; color: var(--ink); line-height: 1.8;
+  margin-bottom: 1rem; padding: 0.8rem 1rem;
+  background: rgba(255,255,255,0.45); border-radius: 4px;
+  border-left: 2.5px solid var(--dust);
+}
+.craft-highlight { color: var(--craft); font-weight: 700; }
+.craft-question {
+  font-family: 'Patrick Hand', cursive; font-size: 0.9rem;
+  color: var(--shadow); margin-bottom: 0.7rem; line-height: 1.5;
+}
+.craft-ta { min-height: 80px; margin-bottom: 0.7rem; }
+.craft-answer {
+  display: none; margin-top: 0.6rem;
+  background: white; border-radius: 4px; padding: 0.85rem 1rem;
+  font-family: 'Patrick Hand', cursive; font-size: 0.9rem; line-height: 1.65;
+  color: var(--ink); border-left: 3px solid var(--craft);
+}
+.craft-answer.visible { display: block; }
+
+/* ===== CREATIVE ===== */
+.entry-prompt {
+  font-family: 'Libre Baskerville', serif; font-style: italic;
+  font-size: 1.1rem; color: var(--ink); line-height: 1.7; margin-bottom: 0.9rem;
+}
+.chip-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 1rem; }
+.prompt-chip {
+  background: var(--chalk); border: 1.5px solid var(--fog);
+  border-radius: 20px; padding: 0.28rem 0.9rem;
+  font-family: 'Patrick Hand', cursive; font-size: 0.85rem;
+  cursor: pointer; color: var(--shadow); transition: all 0.13s;
+}
+.prompt-chip:hover { background: var(--teal); color: white; border-color: var(--teal); }
+.creative-ta { min-height: 220px; }
+
+/* ===== EXTENSION ===== */
+.ext-block { border-left-color: var(--haze); }
+.ext-q-text {
+  font-family: 'Libre Baskerville', serif; font-size: 1rem;
+  color: var(--ink); line-height: 1.7; margin-bottom: 0.8rem;
+}
+.ext-ta { min-height: 90px; margin-bottom: 0.7rem; }
+.ext-answer {
+  display: none; margin-top: 0.5rem;
+  background: white; border-radius: 4px; padding: 0.85rem 1rem;
+  font-family: 'Patrick Hand', cursive; font-size: 0.9rem; line-height: 1.65;
+  color: var(--ink); border-left: 3px solid var(--teal);
+}
+.ext-answer.visible { display: block; }
+
+/* ===== REVEAL BUTTON ===== */
+.reveal-btn {
+  background: none; border: 1.5px solid var(--fog);
+  border-radius: 4px; padding: 0.35rem 0.9rem;
+  font-family: 'Patrick Hand', cursive; font-size: 0.85rem;
+  cursor: pointer; color: var(--ink-soft); transition: all 0.14s;
+}
+.reveal-btn:hover { border-color: var(--ochre); color: var(--shadow); }
+
+/* ===== TEACHER PANEL ===== */
+#teacher-panel {
+  display: none; position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+  align-items: center; gap: 8px; z-index: 1000;
+}
+#teacher-panel.visible { display: flex; }
+#teacher-panel button {
+  padding: 0.5rem 0.8rem; font-size: 0.8rem; font-family: 'Patrick Hand', cursive;
+  border: none; border-radius: 20px; background: rgba(0,0,0,0.62);
+  color: white; cursor: pointer; transition: background 150ms ease;
+}
+#teacher-panel button:hover { background: rgba(0,0,0,0.82); }
+#teacher-panel button.on { background: #D65A4A; }
+
+/* ===== RESPONSE PANEL ===== */
+.response-panel {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0;
+  max-height: 30%; overflow-y: auto;
+  background: rgba(255,255,255,0.97); padding: 1rem; font-size: 0.9rem;
+  box-shadow: 0 -2px 16px rgba(0,0,0,0.12);
+}
+.response-panel.visible { display: block; }
+
+/* ===== FOCUS MODE ===== */
+body.focus-mode .masthead,
+body.focus-mode .zone-nav-wrap { opacity: 0.2; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--divider); border-radius: 2px; }
+
+/* ===== ACT LOCKS ===== */
+.zone-nav button.locked {
+  opacity: .4;
+  cursor: not-allowed;
+}
+.zone-nav button.locked::after {
+  content: " 🔒";
+}
+
+/* ===== NAV ACT DIVIDERS ===== */
+.nav-act-divider {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  padding: 0.5rem 0.3rem 0.2rem;
+  align-self: center;
+  white-space: nowrap;
+  pointer-events: none;
+  border-left: 1px solid rgba(255,255,255,0.2);
+  margin-left: 0.2rem;
+  padding-left: 0.6rem;
+}
+.nav-act-divider:first-child {
+  border-left: none;
+  margin-left: 0;
+  padding-left: 0.3rem;
+}
