@@ -108,6 +108,7 @@ function renderZone(index) {
     case "quiz":      inner = renderQuiz(zone);      break;
     case "charmap":   inner = renderCharmap(zone);   break;
     case "craft":     inner = renderCraft(zone);     break;
+    case "rewrite":   inner = renderRewrite(zone);   break;
     case "creative":  inner = renderCreative(zone);  break;
     case "extension": inner = renderExtension(zone); break;
     default:          inner = renderGeneric(zone);   break;
@@ -240,7 +241,27 @@ function renderCraft(zone) {
   return `<div class="craft-wrap">${blocks}</div>`;
 }
 
-// ── CREATIVE ─────────────────────────────────────────
+// ── REWRITE ──────────────────────────────────────────
+function renderRewrite(zone) {
+  const saved = (zoneState[zone.id] || {}).rewrites || {};
+  const tasks = zone.tasks.map(t => `
+    <div class="rewrite-block surface-dense">
+      <div class="rewrite-label">${t.label}</div>
+      <div class="rewrite-instruction">${t.instruction}</div>
+      <textarea id="ta-${zone.id}-${t.id}" class="thinking-area rewrite-ta" placeholder="${t.placeholder}" data-tid="${t.id}">${saved[t.id] || ""}</textarea>
+      <button class="reveal-btn rewrite-reveal" data-tid="${t.id}" data-example="${t.example}">See one version ↓</button>
+      <div class="rewrite-example" id="rw-ex-${t.id}"></div>
+    </div>`).join("");
+
+  return `
+    <div class="rewrite-source surface-light">
+      <div class="rewrite-source-line">"${zone.sourceLine}"</div>
+      <div class="rewrite-source-note">${zone.sourceNote}</div>
+    </div>
+    <div class="rewrite-wrap">${tasks}</div>`;
+}
+
+
 function renderCreative(zone) {
   const chips = zone.chips.map(c =>
     `<button class="prompt-chip" data-prompt="${c}">${c}</button>`).join("");
@@ -416,7 +437,28 @@ function wireZone(section, zone) {
     });
   }
 
-  // ── CREATIVE chips + save — explicit by id ──
+  // ── REWRITE save + reveal ──
+  if (zone.type === "rewrite") {
+    zone.tasks.forEach(t => {
+      const ta = document.getElementById(`ta-${zone.id}-${t.id}`);
+      if (ta) ta.addEventListener("input", () => {
+        if (!zoneState[zone.id])          zoneState[zone.id] = {};
+        if (!zoneState[zone.id].rewrites) zoneState[zone.id].rewrites = {};
+        zoneState[zone.id].rewrites[t.id] = ta.value;
+        saveToStorage();
+      });
+    });
+    section.querySelectorAll(".rewrite-reveal").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const ex   = section.querySelector(`#rw-ex-${btn.dataset.tid}`);
+        const open = ex.classList.toggle("visible");
+        ex.textContent = open ? btn.dataset.example : "";
+        btn.textContent = open ? "Hide ↑" : "See one version ↓";
+      });
+    });
+  }
+
+
   if (zone.type === "creative") {
     const ta = document.getElementById(`ta-${zone.id}`);
     if (ta) {
