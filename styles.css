@@ -386,25 +386,13 @@ main {
 /* ===== TEACHER PANEL ===== */
 #teacher-panel {
   display: none; position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
-  align-items: center; gap: 8px; z-index: 1000;
+  align-items: center; z-index: 1000;
+  background: rgba(0,0,0,0.62); border-radius: 20px; padding: 0.4rem 1rem;
 }
 #teacher-panel.visible { display: flex; }
-#teacher-panel button {
-  padding: 0.5rem 0.8rem; font-size: 0.8rem; font-family: 'Patrick Hand', cursive;
-  border: none; border-radius: 20px; background: rgba(0,0,0,0.62);
-  color: white; cursor: pointer; transition: background 150ms ease;
+.teacher-label {
+  font-family: 'Patrick Hand', cursive; font-size: 0.8rem; color: rgba(255,255,255,0.82);
 }
-#teacher-panel button:hover { background: rgba(0,0,0,0.82); }
-#teacher-panel button.on { background: #D65A4A; }
-
-/* ===== RESPONSE PANEL ===== */
-.response-panel {
-  display: none; position: fixed; bottom: 0; left: 0; right: 0;
-  max-height: 30%; overflow-y: auto;
-  background: rgba(255,255,255,0.97); padding: 1rem; font-size: 0.9rem;
-  box-shadow: 0 -2px 16px rgba(0,0,0,0.12);
-}
-.response-panel.visible { display: block; }
 
 /* ===== FOCUS MODE ===== */
 body.focus-mode .masthead,
