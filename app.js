@@ -205,7 +205,7 @@ function renderQuiz(zone) {
 function renderCharmap(zone) {
   const nodes = zone.characters.map((c, i) => `
     <div class="char-node" data-ci="${i}">
-      <div class="char-emoji">${c.emoji}</div>
+      <div class="char-initial">${c.initial || c.name[0]}</div>
       <div class="char-name">${c.name}</div>
       <div class="char-role">${c.role}</div>
     </div>`).join("");
@@ -377,7 +377,7 @@ function wireZone(section, zone) {
       const traits = c.traits.map(t => `<span class="trait-tag">${t}</span>`).join("");
       panel.innerHTML = `
         <div class="char-expand-inner">
-          <div class="char-expand-name">${c.emoji} ${c.name} <span class="char-expand-role">${c.role}</span></div>
+          <div class="char-expand-name">${c.initial || c.name[0]} ${c.name} <span class="char-expand-role">${c.role}</span></div>
           <div class="trait-row">${traits}</div>
           <div class="char-think">${c.think}</div>
         </div>`;
