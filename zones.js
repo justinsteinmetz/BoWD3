@@ -73,37 +73,37 @@ const ZONES = [
     prompt: "Which character surprises you most, and why?",
     characters: [
       {
-        name: "Opal",        emoji: "🌻",
+        name: "Opal",        initial: "O",
         role: "Our narrator",
         traits: ["Lonely but brave", "Asks big questions", "Collects people like treasures"],
         think: "Opal talks to strangers, animals, and the sky. What does that tell us about her?"
       },
       {
-        name: "Winn-Dixie",  emoji: "🐾",
+        name: "Winn-Dixie",  initial: "W",
         role: "The dog",
         traits: ["Smiles with all his teeth", "Afraid of thunder", "Brings people together"],
         think: "Winn-Dixie can't speak — but how does DiCamillo make him feel like a character with feelings?"
       },
       {
-        name: "The Preacher", emoji: "📖",
+        name: "The Preacher", initial: "P",
         role: "Opal's father",
         traits: ["Quiet and careful", "Loves Opal deeply", "Carries sadness he doesn't show"],
         think: "Why do you think the preacher finds it so hard to talk about Opal's mother?"
       },
       {
-        name: "Miss Franny", emoji: "📚",
+        name: "Miss Franny", initial: "F",
         role: "The librarian",
         traits: ["Old and small", "Full of big stories", "Afraid but open"],
         think: "Miss Franny tells Opal about a bear. What do stories do for lonely people?"
       },
       {
-        name: "Gloria Dump",  emoji: "🌿",
+        name: "Gloria Dump",  initial: "G",
         role: "The neighbour",
         traits: ["Near-blind but sees deeply", "Wise without being preachy", "Lives with her ghosts"],
         think: "Gloria Dump's mistake tree is full of bottles. What does it mean to carry your past without hiding it?"
       },
       {
-        name: "Otis",        emoji: "🎸",
+        name: "Otis",        initial: "O",
         role: "Pet shop owner",
         traits: ["Shy and gentle", "Plays guitar for animals", "Has a secret past"],
         think: "Otis has done something wrong. Does that make him a bad person? What does Opal decide?"
