@@ -104,9 +104,9 @@ const ZONES = [
       },
       {
         name: "Otis",        initial: "O",
-        role: "Pet shop owner",
+        role: "Pet shop worker",
         traits: ["Shy and gentle", "Plays guitar for animals", "Has a secret past"],
-        think: "Otis has done something wrong. Does that make him a bad person? What does Opal decide?"
+        think: "Otis has done something wrong in his past. Does that make him a bad person? What does Opal decide — and why does it matter?"
       }
     ]
   },
@@ -140,6 +140,40 @@ const ZONES = [
     ]
   },
 
+  // ── 4b. GUIDED REWRITE ────────────────────────────────────
+  {
+    id: "z4b", act: 2, locked: true,
+    title: "Rewrite It",
+    type: "rewrite",
+    subtitle: "Craft in practice",
+    teacherNote: "Students rewrite the same plain sentence three ways. The goal is not a 'correct' version — it's to feel how each technique changes what the sentence does. Read versions aloud; compare what each one makes the reader feel.",
+    sourceLine: "Opal walked home. She felt sad.",
+    sourceNote: "This is flat. It tells us what happened and how she felt. Nothing more.",
+    tasks: [
+      {
+        id: "rw0",
+        label: "Add a simile",
+        instruction: "Rewrite the sentence using a comparison — 'like' or 'as'. What does the sadness remind you of? What does it feel like, physically?",
+        placeholder: "Opal walked home, feeling like…",
+        example: "Opal walked home feeling like a jar with the lid screwed on too tight."
+      },
+      {
+        id: "rw1",
+        label: "Add sensory detail",
+        instruction: "Rewrite it using something Opal can hear, smell, or feel on her skin. Don't name the emotion at all — let the detail carry it.",
+        placeholder: "The gravel was…  /  The air smelled of…",
+        example: "The gravel was loud under her feet. Everything else was quiet."
+      },
+      {
+        id: "rw2",
+        label: "Shift the tone",
+        instruction: "Rewrite it so Opal sounds angry instead of sad — or numb instead of angry. Same moment, different emotional temperature.",
+        placeholder: "Try: angry, numb, or strangely calm…",
+        example: "Opal walked home. She didn't feel anything. That was probably worse."
+      }
+    ]
+  },
+
   // ── 5. CREATIVE WRITING ───────────────────────────────────
   {
     id: "z5", act: 2, locked: true,
@@ -165,19 +199,19 @@ const ZONES = [
     title: "Go Deeper",
     type: "extension",
     subtitle: "Discussion & Thinking",
-    teacherNote: "These questions have no single right answer. Use the 'One way to think about it' reveals to extend discussion, not close it.",
+    teacherNote: "Start with the evidence task — students need a moment in the text before the discussion can go anywhere. Use the reveals to extend thinking, not close it.",
     questions: [
       {
-        q: "Opal collects people the way some people collect objects. Is loneliness always a bad thing in this novel?",
-        reveal: "DiCamillo seems to suggest that loneliness is the thing that makes Opal open — she reaches out precisely because she has nothing to lose. The novel treats loneliness not as a flaw but as a doorway. Every major friendship begins because Opal was lonely enough to knock."
+        q: "Find one moment in the novel where a character is clearly alone — and one moment where two characters genuinely connect. Write one sentence for each. What's different between them?",
+        reveal: "This question has no single answer — the evidence matters more than the conclusion. Loneliness in this novel often looks like silence, avoidance, or a character facing away. Connection tends to arrive sideways: through a story, a laugh, a dog that won't leave. Push students to be specific: which moment, which page, which word."
       },
       {
-        q: "The preacher calls Winn-Dixie a 'gift.' What has the dog actually given each character in the story?",
-        reveal: "Winn-Dixie gives Opal permission to talk to strangers. He gives Miss Franny a reason to tell her stories again. He gives Otis an audience who won't judge him. Gloria Dump gets a reminder that trust is still possible. The dog functions as a social catalyst — a mirror that shows each person what they're missing."
+        q: "Several characters in the novel carry something they can't fix — a person who left, a mistake they made, a grief that won't close. What do people do with things they can't fix?",
+        reveal: "This is the novel's spine. The preacher can't fix Opal's mother leaving — he tells ten things instead. Gloria can't undo her past — she hangs the bottles on a tree so she can see them. Miss Franny can't stop being afraid — but she tells the story anyway. DiCamillo's answer seems to be: you don't fix it. You find a way to carry it with company."
       },
       {
-        q: "By the end of the chapters you've read, what do you think the novel is really about — beyond a girl and her dog?",
-        reveal: "DiCamillo has said the novel is about loss, but also about how communities form around shared sadness. It's about the stories we tell ourselves about people who've left us. And it's about whether the things that scare us — the thunderstorm, the past, other people — can be survived with company."
+        q: "Winn-Dixie doesn't cause the friendships in the novel — he just makes them possible. Why does it sometimes take a third thing to bring two people together?",
+        reveal: "The dog functions as a social catalyst — he gives strangers a reason to speak. Without him, Opal has no way into Miss Franny's library, no excuse to linger at Gertrude's Pets, no reason to knock on Gloria's gate. DiCamillo understands that people who are lonely often need something to talk about before they can talk about themselves."
       }
     ]
   }
