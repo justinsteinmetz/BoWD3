@@ -1,12 +1,36 @@
 // ===== STATE =====
-let studentName = "";
-const zoneState   = {};   // { zoneId: { text, choice, ... } }
-const aggCounts   = {};
-let aggVisible    = true;
-let aggFrozen     = false;
-let focusMode     = false;
-let currentAct    = 1;
+let studentName    = "";
+const zoneState    = {};   // { zoneId: { text, choice, answers, crafts, texts } }
+let focusMode      = false;
 let currentZoneIndex = 0;
+
+// Derive act count from data — never hardcode
+const maxAct = () => Math.max(...zones.map(z => z.act));
+
+// ===== PERSISTENCE =====
+const STORE_KEY = () => `bowd_${studentName}`;
+
+function saveToStorage() {
+  if (!studentName) return;
+  try {
+    localStorage.setItem(STORE_KEY(), JSON.stringify(zoneState));
+  } catch (e) { /* storage full or unavailable */ }
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY());
+    if (raw) Object.assign(zoneState, JSON.parse(raw));
+  } catch (e) { /* corrupt or unavailable */ }
+}
+
+// ===== LOCK STATE =====
+// Separate from zone data — never mutate source
+const unlockedActs = new Set([1]);
+
+function isZoneLocked(zone) {
+  return !unlockedActs.has(zone.act);
+}
 
 // ===== LOGIN =====
 function startSession() {
@@ -14,6 +38,7 @@ function startSession() {
   const name  = input.value.trim();
   if (!name) { input.placeholder = "Please enter your name"; return; }
   studentName = name;
+  loadFromStorage();
   document.getElementById("login-screen").style.display = "none";
   document.body.classList.remove("locked");
   initApp();
@@ -42,12 +67,13 @@ function renderNav() {
     const btn = document.createElement("button");
     btn.innerHTML = `<span class="nav-num">${i + 1}</span>${zone.title}`;
     if (i === currentZoneIndex) btn.classList.add("active");
-    if (zone.locked) {
+    const locked = isZoneLocked(zone);
+    if (locked) {
       btn.classList.add("locked");
       btn.disabled = true;
     }
     btn.onclick = () => {
-      if (zone.locked) return;
+      if (isZoneLocked(zone)) return;
       document.querySelectorAll(".zone-nav button").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       switchZone(i);
@@ -58,7 +84,7 @@ function renderNav() {
 
 // ===== ZONE SWITCH =====
 function switchZone(index) {
-  if (zones[index].locked) return;
+  if (isZoneLocked(zones[index])) return;
   const app     = document.getElementById("app");
   const current = app.querySelector(".zone.active");
   if (current) {
@@ -114,7 +140,7 @@ function renderZone(index) {
 // ── VOCAB ────────────────────────────────────────────
 function renderVocab(zone) {
   const cards = zone.words.map((w, i) => `
-    <div class="vocab-card" data-index="${i}" data-revealed="false">
+    <div class="vocab-card" data-index="${i}">
       <div class="vocab-front">
         <div class="vocab-word">${w.word}</div>
         <div class="vocab-hint">${w.hint} — tap to reveal</div>
@@ -125,11 +151,12 @@ function renderVocab(zone) {
       </div>
     </div>`).join("");
 
+  const saved = (zoneState[zone.id] || {}).text || "";
   return `
     <div class="vocab-grid">${cards}</div>
     <div class="surface-divider"></div>
     <div class="open-write-label">Use one of these words in a sentence of your own:</div>
-    <textarea class="thinking-area" placeholder="e.g. The congregation gathered despite the rain…">${(zoneState[zone.id] || {}).text || ""}</textarea>
+    <textarea id="ta-${zone.id}" class="thinking-area" placeholder="e.g. The congregation gathered despite the rain…">${saved}</textarea>
     <div class="word-count">0 words</div>`;
 }
 
@@ -137,13 +164,13 @@ function renderVocab(zone) {
 function renderQuiz(zone) {
   const saved = (zoneState[zone.id] || {}).answers || {};
   const qs = zone.questions.map((q, qi) => {
-    const answered = saved[qi];
+    const answered = saved[qi] !== undefined ? saved[qi] : undefined;
     const opts = q.opts.map((o, oi) => {
       let cls = "opt-btn";
       if (answered !== undefined) {
-        if (oi === q.correct) cls += " correct";
-        else if (oi === answered && oi !== q.correct) cls += " wrong";
-        else cls += " spent";
+        if (oi === q.correct)                      cls += " correct";
+        else if (oi === answered)                  cls += " wrong";
+        else                                       cls += " spent";
       }
       return `<button class="${cls}" data-qi="${qi}" data-oi="${oi}" ${answered !== undefined ? "disabled" : ""}>${o}</button>`;
     }).join("");
@@ -162,8 +189,13 @@ function renderQuiz(zone) {
       </div>`;
   }).join("");
 
-  const score = Object.values(saved).filter((v, i) => v === zone.questions[i].correct).length;
-  const scoreBadge = Object.keys(saved).length === zone.questions.length
+  // Unified score calculation using entries (correct fix)
+  const answers = (zoneState[zone.id] || {}).answers || {};
+  const allAnswered = Object.keys(answers).length === zone.questions.length;
+  const score = allAnswered
+    ? Object.entries(answers).filter(([qi, oi]) => oi === zone.questions[+qi].correct).length
+    : 0;
+  const scoreBadge = allAnswered
     ? `<div class="score-line">Score: <strong>${score} / ${zone.questions.length}</strong></div>` : "";
 
   return `<div class="quiz-wrap">${qs}${scoreBadge}</div>`;
@@ -184,7 +216,7 @@ function renderCharmap(zone) {
     <div class="char-expand-panel" id="char-panel"></div>
     <div class="surface-divider"></div>
     <div class="open-write-label">${zone.prompt}</div>
-    <textarea class="thinking-area" placeholder="Write your thoughts here…">${saved}</textarea>
+    <textarea id="ta-${zone.id}" class="thinking-area" placeholder="Write your thoughts here…">${saved}</textarea>
     <div class="word-count">0 words</div>`;
 }
 
@@ -195,11 +227,12 @@ function renderCraft(zone) {
       s.highlight,
       `<span class="craft-highlight">${s.highlight}</span>`
     );
+    const savedText = ((zoneState[zone.id] || {}).crafts || {})[si] || "";
     return `
       <div class="craft-block surface-dense">
         <div class="craft-quote">"${quoted}"</div>
         <div class="craft-question">${s.question}</div>
-        <textarea class="thinking-area craft-ta" placeholder="Your analysis…" data-si="${si}">${((zoneState[zone.id] || {}).crafts || {})[si] || ""}</textarea>
+        <textarea id="ta-${zone.id}-${si}" class="thinking-area craft-ta" placeholder="Your analysis…" data-si="${si}">${savedText}</textarea>
         <button class="reveal-btn" data-si="${si}">What DiCamillo means ↓</button>
         <div class="craft-answer" id="craft-ans-${si}">${s.answer}</div>
       </div>`;
@@ -216,7 +249,7 @@ function renderCreative(zone) {
     <div class="surface-light">
       <div class="entry-prompt">${zone.mainPrompt}</div>
       <div class="chip-row">${chips}</div>
-      <textarea class="thinking-area creative-ta" placeholder="${zone.placeholder}">${saved}</textarea>
+      <textarea id="ta-${zone.id}" class="thinking-area creative-ta" placeholder="${zone.placeholder}">${saved}</textarea>
       <div class="word-count">0 words</div>
     </div>`;
 }
@@ -228,7 +261,7 @@ function renderExtension(zone) {
     return `
       <div class="ext-block surface-dense">
         <div class="ext-q-text">${q.q}</div>
-        <textarea class="thinking-area ext-ta" placeholder="Your thinking…" data-qi="${qi}">${saved}</textarea>
+        <textarea id="ta-${zone.id}-${qi}" class="thinking-area ext-ta" placeholder="Your thinking…" data-qi="${qi}">${saved}</textarea>
         <button class="reveal-btn ext-reveal" data-qi="${qi}">One way to think about it ↓</button>
         <div class="ext-answer" id="ext-ans-${qi}">${q.reveal}</div>
       </div>`;
@@ -243,11 +276,12 @@ function renderGeneric(zone) {
     <div class="choice-row">
       ${zone.choices.map(c => `<button class="${saved.choice === c ? "selected" : ""}" data-choice="${c}">${c}</button>`).join("")}
     </div>` : "";
+  const savedText = saved.text || "";
   return `
     <div class="zone-prompt">${zone.prompt || ""}</div>
     ${choiceHtml}
     <div class="open-write-label">Your thoughts</div>
-    <textarea class="thinking-area" placeholder="Write a short thought…">${saved.text || ""}</textarea>
+    <textarea id="ta-${zone.id}" class="thinking-area" placeholder="Write a short thought…">${savedText}</textarea>
     <div class="word-count">0 words</div>`;
 }
 
@@ -270,17 +304,16 @@ function wireZone(section, zone) {
 
   // ── VOCAB flip ──
   section.querySelectorAll(".vocab-card").forEach(card => {
-    card.addEventListener("click", () => {
-      card.classList.toggle("revealed");
-    });
+    card.addEventListener("click", () => card.classList.toggle("revealed"));
   });
 
-  // Vocab textarea save
-  const vocabTa = section.querySelector(".thinking-area:not(.craft-ta):not(.creative-ta):not(.ext-ta)");
-  if (vocabTa && zone.type === "vocab") {
-    vocabTa.addEventListener("input", () => {
+  // ── VOCAB textarea — explicit by id ──
+  if (zone.type === "vocab") {
+    const ta = document.getElementById(`ta-${zone.id}`);
+    if (ta) ta.addEventListener("input", () => {
       if (!zoneState[zone.id]) zoneState[zone.id] = {};
-      zoneState[zone.id].text = vocabTa.value;
+      zoneState[zone.id].text = ta.value;
+      saveToStorage();
     });
   }
 
@@ -292,30 +325,29 @@ function wireZone(section, zone) {
       const q   = zone.questions[qi];
       const row = section.querySelector(`#qq-${qi}`);
 
-      // disable all options in this question
       row.querySelectorAll(".opt-btn").forEach(b => {
         b.disabled = true;
         const boi = +b.dataset.oi;
-        if (boi === q.correct) b.classList.add("correct");
-        else if (boi === oi)   b.classList.add("wrong");
-        else                   b.classList.add("spent");
+        if (boi === q.correct)    b.classList.add("correct");
+        else if (boi === oi)      b.classList.add("wrong");
+        else                      b.classList.add("spent");
       });
 
-      // feedback
       const fb = row.querySelector(".feedback");
       const correct = oi === q.correct;
-      fb.className = "feedback " + (correct ? "fb-correct" : "fb-wrong");
+      fb.className   = "feedback " + (correct ? "fb-correct" : "fb-wrong");
       fb.textContent = (correct ? "✓ Correct — " : "✗ Not quite — ") + q.explain;
 
-      // save answer
-      if (!zoneState[zone.id])          zoneState[zone.id] = {};
-      if (!zoneState[zone.id].answers)  zoneState[zone.id].answers = {};
+      if (!zoneState[zone.id])         zoneState[zone.id] = {};
+      if (!zoneState[zone.id].answers) zoneState[zone.id].answers = {};
       zoneState[zone.id].answers[qi] = oi;
+      saveToStorage();
 
-      // score badge
-      const answered = zoneState[zone.id].answers;
-      if (Object.keys(answered).length === zone.questions.length) {
-        const score = Object.entries(answered).filter(([i, v]) => +v === zone.questions[+i].correct).length;
+      // Unified score — entries, not values
+      const answers = zoneState[zone.id].answers;
+      if (Object.keys(answers).length === zone.questions.length) {
+        const score = Object.entries(answers)
+          .filter(([i, v]) => v === zone.questions[+i].correct).length;
         const wrap  = section.querySelector(".quiz-wrap");
         let badge   = wrap.querySelector(".score-line");
         if (!badge) { badge = document.createElement("div"); badge.className = "score-line"; wrap.appendChild(badge); }
@@ -327,11 +359,10 @@ function wireZone(section, zone) {
   // ── CHARMAP expand ──
   section.querySelectorAll(".char-node").forEach(node => {
     node.addEventListener("click", () => {
-      const ci   = +node.dataset.ci;
-      const c    = zone.characters[ci];
+      const ci    = +node.dataset.ci;
+      const c     = zone.characters[ci];
       const panel = section.querySelector("#char-panel");
 
-      // toggle off if same
       if (panel.dataset.open === String(ci)) {
         panel.dataset.open = "";
         panel.innerHTML    = "";
@@ -353,66 +384,76 @@ function wireZone(section, zone) {
     });
   });
 
-  // Charmap textarea save
-  const charmapTa = zone.type === "charmap" ? section.querySelector(".thinking-area") : null;
-  if (charmapTa) {
-    charmapTa.addEventListener("input", () => {
+  // ── CHARMAP textarea — explicit by id ──
+  if (zone.type === "charmap") {
+    const ta = document.getElementById(`ta-${zone.id}`);
+    if (ta) ta.addEventListener("input", () => {
       if (!zoneState[zone.id]) zoneState[zone.id] = {};
-      zoneState[zone.id].text = charmapTa.value;
+      zoneState[zone.id].text = ta.value;
+      saveToStorage();
     });
   }
 
-  // ── CRAFT reveal + save ──
-  section.querySelectorAll(".craft-ta").forEach(ta => {
-    ta.addEventListener("input", () => {
-      const si = ta.dataset.si;
-      if (!zoneState[zone.id])         zoneState[zone.id] = {};
-      if (!zoneState[zone.id].crafts)  zoneState[zone.id].crafts = {};
-      zoneState[zone.id].crafts[si] = ta.value;
+  // ── CRAFT reveal + save — explicit by id ──
+  if (zone.type === "craft") {
+    zone.similes.forEach((_, si) => {
+      const ta = document.getElementById(`ta-${zone.id}-${si}`);
+      if (ta) ta.addEventListener("input", () => {
+        if (!zoneState[zone.id])        zoneState[zone.id] = {};
+        if (!zoneState[zone.id].crafts) zoneState[zone.id].crafts = {};
+        zoneState[zone.id].crafts[si] = ta.value;
+        saveToStorage();
+      });
     });
-  });
-  section.querySelectorAll(".reveal-btn").forEach(btn => {
-    if (btn.dataset.si !== undefined) {
-      btn.addEventListener("click", () => {
-        const ans = section.querySelector(`#craft-ans-${btn.dataset.si}`);
-        const open = ans.classList.toggle("visible");
-        btn.textContent = open ? "Hide ↑" : "What DiCamillo means ↓";
+    section.querySelectorAll(".reveal-btn").forEach(btn => {
+      if (btn.dataset.si !== undefined) {
+        btn.addEventListener("click", () => {
+          const ans  = section.querySelector(`#craft-ans-${btn.dataset.si}`);
+          const open = ans.classList.toggle("visible");
+          btn.textContent = open ? "Hide ↑" : "What DiCamillo means ↓";
+        });
+      }
+    });
+  }
+
+  // ── CREATIVE chips + save — explicit by id ──
+  if (zone.type === "creative") {
+    const ta = document.getElementById(`ta-${zone.id}`);
+    if (ta) {
+      section.querySelectorAll(".prompt-chip").forEach(chip => {
+        chip.addEventListener("click", () => {
+          ta.value += (ta.value ? "\n" : "") + chip.dataset.prompt + " ";
+          ta.focus();
+          ta.dispatchEvent(new Event("input"));
+        });
+      });
+      ta.addEventListener("input", () => {
+        if (!zoneState[zone.id]) zoneState[zone.id] = {};
+        zoneState[zone.id].text = ta.value;
+        saveToStorage();
       });
     }
-  });
-
-  // ── CREATIVE chips + save ──
-  const creativeTa = section.querySelector(".creative-ta");
-  if (creativeTa) {
-    section.querySelectorAll(".prompt-chip").forEach(chip => {
-      chip.addEventListener("click", () => {
-        creativeTa.value += (creativeTa.value ? "\n" : "") + chip.dataset.prompt + " ";
-        creativeTa.focus();
-        creativeTa.dispatchEvent(new Event("input"));
-      });
-    });
-    creativeTa.addEventListener("input", () => {
-      if (!zoneState[zone.id]) zoneState[zone.id] = {};
-      zoneState[zone.id].text = creativeTa.value;
-    });
   }
 
-  // ── EXTENSION reveal + save ──
-  section.querySelectorAll(".ext-ta").forEach(ta => {
-    ta.addEventListener("input", () => {
-      const qi = ta.dataset.qi;
-      if (!zoneState[zone.id])        zoneState[zone.id] = {};
-      if (!zoneState[zone.id].texts)  zoneState[zone.id].texts = {};
-      zoneState[zone.id].texts[qi] = ta.value;
+  // ── EXTENSION reveal + save — explicit by id ──
+  if (zone.type === "extension") {
+    zone.questions.forEach((_, qi) => {
+      const ta = document.getElementById(`ta-${zone.id}-${qi}`);
+      if (ta) ta.addEventListener("input", () => {
+        if (!zoneState[zone.id])       zoneState[zone.id] = {};
+        if (!zoneState[zone.id].texts) zoneState[zone.id].texts = {};
+        zoneState[zone.id].texts[qi] = ta.value;
+        saveToStorage();
+      });
     });
-  });
-  section.querySelectorAll(".ext-reveal").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const ans  = section.querySelector(`#ext-ans-${btn.dataset.qi}`);
-      const open = ans.classList.toggle("visible");
-      btn.textContent = open ? "Hide ↑" : "One way to think about it ↓";
+    section.querySelectorAll(".ext-reveal").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const ans  = section.querySelector(`#ext-ans-${btn.dataset.qi}`);
+        const open = ans.classList.toggle("visible");
+        btn.textContent = open ? "Hide ↑" : "One way to think about it ↓";
+      });
     });
-  });
+  }
 
   // ── GENERIC choice buttons ──
   section.querySelectorAll(".choice-row button").forEach(btn => {
@@ -421,6 +462,7 @@ function wireZone(section, zone) {
       btn.classList.add("selected");
       if (!zoneState[zone.id]) zoneState[zone.id] = {};
       zoneState[zone.id].choice = btn.dataset.choice;
+      saveToStorage();
     });
   });
 }
@@ -428,32 +470,6 @@ function wireZone(section, zone) {
 // ═══════════════════════════════════════════════════════
 // TEACHER CONTROLS
 // ═══════════════════════════════════════════════════════
-function toggleAggregation() {
-  aggVisible = !aggVisible;
-  const btn = document.getElementById("btn-agg");
-  btn.textContent = aggVisible ? "Hide responses" : "Show responses";
-  btn.classList.toggle("on", !aggVisible);
-}
-function freezeAggregation() {
-  aggFrozen = !aggFrozen;
-  const btn = document.getElementById("btn-freeze");
-  btn.textContent = aggFrozen ? "Unfreeze" : "Freeze";
-  btn.classList.toggle("on", aggFrozen);
-}
-function resetAggregation() {
-  Object.keys(aggCounts).forEach(id => {
-    const zone = zones.find(z => z.id === id);
-    if (zone && zone.choices) zone.choices.forEach(c => { aggCounts[id][c] = 0; });
-  });
-}
-function toggleResponsePanel() {
-  const panel  = document.getElementById("response-panel");
-  const btn    = document.getElementById("btn-responses");
-  const visible = panel.classList.toggle("visible");
-  panel.style.display = visible ? "block" : "none";
-  btn.textContent     = visible ? "Hide thoughts" : "Show thoughts";
-  btn.classList.toggle("on", visible);
-}
 function toggleFocusMode() {
   focusMode = !focusMode;
   document.body.classList.toggle("focus-mode", focusMode);
@@ -462,9 +478,11 @@ function toggleFocusMode() {
 // ── Keyboard shortcuts ──
 document.addEventListener("keydown", e => {
   if (e.shiftKey && e.key === "U") {
-    if (currentAct < 3) currentAct++;
-    zones.forEach(z => { if (z.act <= currentAct) z.locked = false; });
-    renderNav();
+    const next = Math.max(...[...unlockedActs]) + 1;
+    if (next <= maxAct()) {
+      unlockedActs.add(next);
+      renderNav();
+    }
   }
   if (e.shiftKey && e.key === "T") document.getElementById("teacher-panel").classList.toggle("visible");
   if (e.shiftKey && e.key === "F") toggleFocusMode();
